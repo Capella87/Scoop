@@ -771,7 +771,7 @@ function Invoke-ExternalCommand {
         $Process.StartInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
     }
     if ($ArgumentList.Length -gt 0) {
-        $ArgumentList = $ArgumentList | ForEach-Object { [regex]::Split($_.Replace('"', ''), '(?<=(?<![:\w])[/-]\w+) | (?=[/-])') }
+        $ArgumentList = $ArgumentList.ForEach({ $_ -replace '(?<!\\)"', '' -split '(?<=(?<![:\w])[/-]\w+) | (?=[/-])' })
         # Use legacy argument escaping for commands having non-standard behavior
         # with regard to argument passing. `msiexec` requires some args like
         # `TARGETDIR="C:\Program Files"`, which is non-standard, therefore we
@@ -787,14 +787,12 @@ function Invoke-ExternalCommand {
         } else {
             # escape arguments manually in lower versions, refer to https://docs.microsoft.com/en-us/previous-versions/17w5ykft(v=vs.85)
             $escapedArgs = $ArgumentList | ForEach-Object {
-                # escape N consecutive backslash(es), which are followed by a double quote or at the end of the string, to 2N consecutive ones
-                $s = $_ -replace '(\\+)(""|$)', '$1$1$2'
-                # quote the path if it contains spaces and is not NSIS's '/D' argument
+                # Quote the path if it contains spaces and is not NSIS's '/D' argument
                 # ref: https://nsis.sourceforge.io/Docs/Chapter3.html
-                if ($s -match ' ' -and $s -notmatch '/D=[A-Z]:[\\/].*') {
-                    $s -replace '([A-Z]:[\\/].*)', '"$1"'
+                if ($_ -match ' ' -and $_ -notmatch '/D=[A-Z]:[\\/].*') {
+                    $_ -replace '([A-Z]:[\\/].*)', '"$1"' -replace '''', '"'
                 } else {
-                    $s
+                    $_
                 }
             }
             $Process.StartInfo.Arguments = $escapedArgs -join ' '

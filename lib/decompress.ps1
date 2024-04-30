@@ -29,10 +29,10 @@ function Expand-7zipArchive {
     }
     $LogPath = "$(Split-Path $Path)\7zip.log"
     $DestinationPath = $DestinationPath.TrimEnd('\')
-    $ArgList = @('x', $Path, "-o$DestinationPath", '-xr!*.nsis', '-y')
+    $ArgList = @('x', $Path, "-o$DestinationPath", "-xr!'*.nsis'", '-y')
     $IsTar = ((strip_ext $Path) -match '\.tar$') -or ($Path -match '\.t[abgpx]z2?$')
     if (!$IsTar -and $ExtractDir) {
-        $ArgList += "-ir!$ExtractDir\*"
+        $ArgList += "-ir!'$ExtractDir\*'"
     }
     if ($Switches) {
         $ArgList += (-split $Switches)
